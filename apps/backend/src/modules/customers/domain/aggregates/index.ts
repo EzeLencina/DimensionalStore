@@ -1,0 +1,10 @@
+export { Customer } from './customer.aggregate';
+export type { CustomerPrimitives } from './customer.aggregate';
+export { CustomerAddress } from './customer-address';
+export type { CustomerAddressPrimitives } from './customer-address';
+export { CustomerPreferences } from './customer-preferences';
+export type { CustomerPreferencesPrimitives } from './customer-preferences';
+export { CustomerTag } from './customer-tag';
+export type { CustomerTagPrimitives } from './customer-tag';
+export { CustomerNote } from './customer-note';
+export type { CustomerNotePrimitives } from './customer-note';

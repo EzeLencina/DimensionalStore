@@ -1,0 +1,10 @@
+export { DomainEvent } from './domain-event';
+export { ProductVariantCreatedEvent } from './variant-created.event';
+export { ProductVariantSkuChangedEvent } from './variant-sku-changed.event';
+export { ProductVariantAttributesChangedEvent } from './variant-attributes-changed.event';
+export { ProductVariantActivatedEvent } from './variant-activated.event';
+export { ProductVariantDeactivatedEvent } from './variant-deactivated.event';
+export { ProductVariantArchivedEvent } from './variant-archived.event';
+export { ProductVariantRestoredEvent } from './variant-restored.event';
+export { ProductVariantSetAsDefaultEvent } from './variant-set-as-default.event';
+export { ProductVariantDeletedEvent } from './variant-deleted.event';

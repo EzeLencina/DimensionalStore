@@ -1,0 +1,20 @@
+export type CollectionResponseDto = {
+  id: string;
+  tenantId: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  type: string;
+  status: string;
+  visibility: string;
+  displayOrder: number;
+  startAt: string | null;
+  endAt: string | null;
+  seoTitle: string | null;
+  seoDescription: string | null;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+  version: number;
+  productCount?: number;
+};

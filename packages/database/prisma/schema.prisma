@@ -1,0 +1,1171 @@
+generator client {
+  provider        = "prisma-client-js"
+  binaryTargets   = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+  directUrl         = env("DATABASE_URL_DIRECT")
+}
+
+/// Product domain aggregate root.
+/// Represents a commercial product with multi-tenant isolation.
+model Product {
+  /// Internal identifier (not exposed as commercial ID)
+  id                String   @id @default(cuid())
+
+  /// Multi-tenant isolation
+  tenantId          String
+  organizationId    String?
+
+  /// Core identity
+  name              String
+  slug              String
+  shortDescription  String?
+  description       String?
+
+  /// Typing
+  productType       ProductType   @default(PHYSICAL)
+  status            ProductStatus @default(DRAFT)
+  visibility        ProductVisibility @default(PUBLIC)
+  condition         ProductCondition @default(NEW)
+
+  /// Warranty in months (nullable = no warranty defined yet)
+  warrantyMonths    Int?
+
+    /// Optional brand association (cross-tenant guarded at app layer)
+  brandId           String?
+
+  /// SEO
+  seoTitle          String?
+  seoDescription    String?
+
+  /// Soft delete
+  deletedAt         DateTime?
+
+  /// Optimistic concurrency
+  version           Int           @default(1)
+
+  /// Timestamps
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  /// Constraints
+  @@unique([tenantId, slug])
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@index([tenantId, visibility])
+  @@index([tenantId, brandId])
+  @@index([tenantId, createdAt])
+  @@index([tenantId, updatedAt])
+  @@index([tenantId, deletedAt])
+  @@map("products")
+}
+
+/// Product type classification
+enum ProductType {
+  /// Physical goods (default)
+  PHYSICAL
+  /// Digital goods (future)
+  DIGITAL
+  /// Services (future)
+  SERVICE
+  /// Product bundles (future)
+  BUNDLE
+}
+
+/// Product lifecycle status
+enum ProductStatus {
+  /// Initial editable state
+  DRAFT
+  /// Published and available
+  ACTIVE
+  /// Temporarily unavailable
+  INACTIVE
+  /// Permanently archived
+  ARCHIVED
+}
+
+/// Product visibility in sales channels
+enum ProductVisibility {
+  /// Visible in all channels
+  PUBLIC
+  /// Visible only to authenticated users
+  PRIVATE
+  /// Hidden from all listings (accessible by direct link)
+  HIDDEN
+}
+
+/// Product condition
+enum ProductCondition {
+  /// Brand new
+  NEW
+  /// Refurbished / reconditioned
+  REFURBISHED
+  /// Pre-owned
+  USED
+}
+
+/// ── Catalog Domain ────────────────────────────────────────
+
+/// Catalog item lifecycle status (shared between Category and Collection)
+enum CatalogStatus {
+  DRAFT
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+/// Catalog item visibility
+enum CatalogVisibility {
+  PUBLIC
+  PRIVATE
+  HIDDEN
+}
+
+/// Collection type strategy
+enum CollectionType {
+  MANUAL
+  RULE_BASED
+  TEMPORARY
+  FEATURED
+}
+
+/// Navigable product category (hierarchical via self-reference)
+model Category {
+  id              String   @id @default(cuid())
+  tenantId        String
+  parentId        String?
+
+  name            String
+  slug            String
+  description     String?
+  shortDescription String?
+
+  status          CatalogStatus      @default(DRAFT)
+  visibility      CatalogVisibility  @default(PUBLIC)
+  displayOrder    Int                @default(0)
+
+  icon            String?
+  image           String?
+  seoTitle        String?
+  seoDescription  String?
+
+  deletedAt       DateTime?
+  version         Int                @default(1)
+
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  parent          Category?          @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children        Category[]         @relation("CategoryHierarchy")
+
+  @@unique([tenantId, slug])
+  @@index([tenantId])
+  @@index([tenantId, parentId])
+  @@index([tenantId, status])
+  @@index([tenantId, visibility])
+  @@index([tenantId, displayOrder])
+  @@map("categories")
+}
+
+/// Commercial product collection
+model Collection {
+  id              String   @id @default(cuid())
+  tenantId        String
+
+  name            String
+  slug            String
+  description     String?
+
+  type            CollectionType      @default(MANUAL)
+  status          CatalogStatus       @default(DRAFT)
+  visibility      CatalogVisibility   @default(PUBLIC)
+  displayOrder    Int                 @default(0)
+
+  startAt         DateTime?
+  endAt           DateTime?
+  seoTitle        String?
+  seoDescription  String?
+
+  deletedAt       DateTime?
+  version         Int                @default(1)
+
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  @@unique([tenantId, slug])
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@index([tenantId, visibility])
+  @@index([tenantId, displayOrder])
+  @@index([tenantId, startAt, endAt])
+  @@map("collections")
+}
+
+/// Many-to-many between products and categories
+model ProductCategory {
+  tenantId     String
+  productId    String
+  categoryId   String
+  createdAt    DateTime @default(now())
+
+  @@id([tenantId, productId, categoryId])
+  @@index([tenantId, categoryId])
+  @@index([tenantId, productId])
+  @@map("product_categories")
+}
+
+/// Many-to-many between products and collections
+model ProductCollection {
+  tenantId     String
+  productId    String
+  collectionId String
+  displayOrder Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  @@id([tenantId, productId, collectionId])
+  @@index([tenantId, collectionId])
+  @@index([tenantId, collectionId, displayOrder])
+  @@map("product_collections")
+}
+
+/// ── Brands Domain ─────────────────────────────────────────
+
+/// Brand lifecycle status
+enum BrandStatus {
+  DRAFT
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+/// Brand visibility in sales channels
+enum BrandVisibility {
+  PUBLIC
+  PRIVATE
+  HIDDEN
+}
+
+/// Commercial product brand
+model Brand {
+  id              String          @id @default(cuid())
+  tenantId        String
+
+  name            String
+  slug            String
+  description     String?
+  logoUrl         String?
+  websiteUrl      String?
+
+  status          BrandStatus     @default(DRAFT)
+  visibility      BrandVisibility @default(PUBLIC)
+
+  seoTitle        String?
+  seoDescription  String?
+
+  deletedAt       DateTime?
+  version         Int             @default(1)
+
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@unique([tenantId, slug])
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@index([tenantId, visibility])
+  @@index([tenantId, name])
+  @@map("brands")
+}
+
+/// ── Variants Domain ──────────────────────────────────────
+
+/// Variant lifecycle status
+enum VariantStatus {
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+/// Product variant (SKU-level variation)
+model ProductVariant {
+  id              String        @id @default(cuid())
+  tenantId        String
+  productId       String
+
+  sku             String
+  name            String?
+  barcode         String?
+
+  status          VariantStatus @default(ACTIVE)
+  attributes      Json          @default("[]")
+  isDefault       Boolean       @default(false)
+
+  deletedAt       DateTime?
+  version         Int           @default(1)
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@unique([tenantId, sku])
+  @@index([tenantId, productId])
+  @@index([tenantId, status])
+  @@index([tenantId, barcode])
+  @@index([tenantId, productId, isDefault])
+  @@map("product_variants")
+}
+
+/// ── Inventory Domain ──────────────────────────────────────
+
+/// Warehouse status
+enum WarehouseStatus {
+  ACTIVE
+  INACTIVE
+}
+
+/// Physical or logical warehouse
+model Warehouse {
+  id              String          @id @default(cuid())
+  tenantId        String
+  name            String
+  code            String
+  address         String?
+  status          WarehouseStatus @default(ACTIVE)
+  isDefault       Boolean         @default(false)
+
+  deletedAt       DateTime?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@index([tenantId, isDefault])
+  @@map("warehouses")
+}
+
+/// Stock-keeping unit per variant and warehouse
+model InventoryItem {
+  id                String   @id @default(cuid())
+  tenantId          String
+  warehouseId       String
+  productVariantId  String
+
+  sku               String
+  onHand            Int      @default(0)
+  reserved          Int      @default(0)
+  available         Int      @default(0)
+  minimumStock      Int      @default(0)
+  version           Int      @default(1)
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([tenantId, warehouseId, productVariantId])
+  @@index([tenantId, sku])
+  @@index([tenantId, warehouseId])
+  @@index([tenantId, productVariantId])
+  @@map("inventory_items")
+}
+
+/// Stock movement type
+enum MovementType {
+  INITIAL
+  INBOUND
+  OUTBOUND
+  ADJUSTMENT_IN
+  ADJUSTMENT_OUT
+  RESERVATION
+  RELEASE
+  TRANSFER_IN
+  TRANSFER_OUT
+}
+
+/// Immutable stock movement log
+model StockMovement {
+  id                String        @id @default(cuid())
+  tenantId          String
+  warehouseId       String
+  productVariantId  String
+  type              MovementType
+  quantity          Int
+  previousOnHand    Int
+  resultingOnHand   Int
+  referenceType     String?
+  referenceId       String?
+  reason            String
+  metadata          Json?
+  createdBy         String
+
+  createdAt         DateTime      @default(now())
+
+  @@index([tenantId, productVariantId, createdAt])
+  @@index([tenantId, warehouseId, createdAt])
+  @@index([tenantId, referenceType, referenceId])
+  @@map("stock_movements")
+}
+
+/// Reservation status
+enum ReservationStatus {
+  ACTIVE
+  RELEASED
+  CONSUMED
+  EXPIRED
+  CANCELLED
+}
+
+/// Stock reservation
+model StockReservation {
+  id                String            @id @default(cuid())
+  tenantId          String
+  warehouseId       String
+  productVariantId  String
+  quantity          Int
+  status            ReservationStatus @default(ACTIVE)
+  referenceType     String
+  referenceId       String
+  expiresAt         DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  @@unique([tenantId, referenceType, referenceId, productVariantId])
+  @@index([tenantId, status, expiresAt])
+  @@map("stock_reservations")
+}
+
+/// ── Pricing Domain ────────────────────────────────────────
+
+/// Price list type
+enum PriceListType {
+  RETAIL
+  WHOLESALE
+  CHANNEL
+  CUSTOMER_GROUP
+  PROMOTIONAL
+}
+
+/// Sales channel
+enum SalesChannel {
+  WEB
+  ADMIN
+  MERCADO_LIBRE
+  TIENDANUBE
+  WOOCOMMERCE
+  MANUAL
+}
+
+/// Price list (collection of prices per variant)
+model PriceList {
+  id              String        @id @default(cuid())
+  tenantId        String
+  name            String
+  code            String
+  currency        String        @default("ARS")
+  type            PriceListType @default(RETAIL)
+  priority        Int           @default(0)
+  status          String        @default("ACTIVE")
+  channel         SalesChannel?
+  customerGroup   String?
+  startsAt        DateTime?
+  endsAt          DateTime?
+  isDefault       Boolean       @default(false)
+
+  deletedAt       DateTime?
+  version         Int           @default(1)
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@unique([tenantId, code])
+  @@index([tenantId, status])
+  @@index([tenantId, currency])
+  @@index([tenantId, channel])
+  @@index([tenantId, isDefault])
+  @@map("price_lists")
+}
+
+/// Price per variant/SKU within a price list
+model VariantPrice {
+  id                  String   @id @default(cuid())
+  tenantId            String
+  priceListId         String
+  productVariantId    String
+  sku                 String
+
+  costAmount          Int?
+  listAmount          Int
+  saleAmount          Int?
+  promotionalAmount   Int?
+  promotionalStartsAt DateTime?
+  promotionalEndsAt   DateTime?
+  minimumQuantity     Int      @default(1)
+
+  deletedAt           DateTime?
+  version             Int      @default(1)
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@unique([tenantId, priceListId, productVariantId, minimumQuantity])
+  @@index([tenantId, productVariantId])
+  @@index([tenantId, sku])
+  @@index([tenantId, promotionalStartsAt, promotionalEndsAt])
+  @@map("variant_prices")
+}
+
+/// Immutable price change history
+model PriceHistory {
+  id              String   @id @default(cuid())
+  tenantId        String
+  variantPriceId  String
+  productVariantId String?
+
+  changeType      String
+  previousValues  Json
+  newValues       Json
+  changedBy       String
+  reason          String?
+
+  createdAt       DateTime @default(now())
+
+  @@index([tenantId, variantPriceId, createdAt])
+  @@index([tenantId, productVariantId, createdAt])
+  @@map("price_history")
+}
+
+/// ── Cart Domain ─────────────────────────────────────────────
+
+/// Cart lifecycle status
+enum CartStatus {
+  ACTIVE
+  CONVERTED
+  ABANDONED
+  EXPIRED
+  CANCELLED
+}
+
+/// Shopping cart aggregate root
+model Cart {
+  id              String     @id @default(cuid())
+  tenantId        String
+  customerId      String?
+  guestTokenHash  String?
+
+  status          CartStatus @default(ACTIVE)
+  currency        String     @default("ARS")
+  itemsCount      Int        @default(0)
+  subtotal        Int        @default(0)
+  total           Int        @default(0)
+
+  expiresAt       DateTime
+  version         Int        @default(1)
+
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  items           CartItem[]
+
+  @@index([tenantId, customerId, status])
+  @@index([tenantId, guestTokenHash, status])
+  @@index([tenantId, status, expiresAt])
+  @@index([tenantId, updatedAt])
+  @@map("carts")
+}
+
+/// Cart item (value object owned by Cart aggregate)
+model CartItem {
+  id                String   @id @default(cuid())
+  cartId            String
+  productVariantId  String
+  sku               String
+
+  quantity          Int
+  unitPriceSnapshot Int
+  subtotalSnapshot  Int
+
+  addedAt           DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  cart              Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+
+  @@unique([cartId, productVariantId])
+  @@index([cartId])
+  @@index([productVariantId])
+  @@index([sku])
+  @@map("cart_items")
+}
+
+/// ── Checkout & Order Domain ────────────────────────────────
+
+/// Checkout lifecycle status
+enum CheckoutStatus {
+  OPEN
+  VALIDATING
+  READY
+  COMPLETED
+  EXPIRED
+  CANCELLED
+  FAILED
+}
+
+/// Order lifecycle status
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAYMENT_CONFIRMED
+  PAYMENT_FAILED
+  PROCESSING
+  READY_FOR_PICKUP
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  EXPIRED
+  PARTIALLY_CANCELLED
+  RETURN_REQUESTED
+  RETURNED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+/// Checkout session aggregate root
+model CheckoutSession {
+  id              String         @id @default(cuid())
+  tenantId        String
+  cartId          String
+  customerId      String?
+  guestEmail      String?
+
+  status          CheckoutStatus @default(OPEN)
+  currency        String         @default("ARS")
+  subtotal        Int            @default(0)
+  shippingAmount  Int            @default(0)
+  discountAmount  Int            @default(0)
+  taxAmount       Int            @default(0)
+  total           Int            @default(0)
+
+  shippingMethodCode String?
+  paymentMethodCode  String?
+
+  expiresAt       DateTime
+  idempotencyKey  String?
+  version         Int            @default(1)
+
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  address         CheckoutAddress?
+  order           Order?
+
+  @@unique([tenantId, idempotencyKey])
+  @@index([tenantId, cartId])
+  @@index([tenantId, status, expiresAt])
+  @@map("checkout_sessions")
+}
+
+/// Shipping or billing address
+model CheckoutAddress {
+  id                String   @id @default(cuid())
+  checkoutSessionId String   @unique
+  type              String   @default("SHIPPING")
+  recipientName     String
+  phone             String?
+  street            String
+  number            String
+  apartment         String?
+  city              String
+  province          String
+  postalCode        String
+  country           String   @default("AR")
+  notes             String?
+
+  checkoutSession   CheckoutSession @relation(fields: [checkoutSessionId], references: [id], onDelete: Cascade)
+
+  @@map("checkout_addresses")
+}
+
+/// Order aggregate root
+model Order {
+  id                String      @id @default(cuid())
+  tenantId          String
+  orderNumber       String
+  cartId            String
+  checkoutSessionId String      @unique
+  customerId        String?
+  guestEmail        String?
+
+  status            OrderStatus @default(PENDING_PAYMENT)
+  currency          String      @default("ARS")
+  subtotal          Int         @default(0)
+  shippingAmount    Int         @default(0)
+  discountAmount    Int         @default(0)
+  taxAmount         Int         @default(0)
+  total             Int         @default(0)
+
+  shippingMethodCode String?
+  paymentMethodCode  String?
+
+  paymentStatus     String?
+  fulfillmentStatus String?
+
+  cancellationReason String?
+  cancelledAt       DateTime?
+  confirmedAt       DateTime?
+  processingStartedAt DateTime?
+  readyAt           DateTime?
+  shippedAt         DateTime?
+  deliveredAt       DateTime?
+  expiredAt         DateTime?
+  carrierCode       String?
+  trackingNumber    String?
+  trackingUrl       String?
+
+  version           Int         @default(1)
+
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  items             OrderItem[]
+  checkoutSession   CheckoutSession @relation(fields: [checkoutSessionId], references: [id])
+  customer          Customer?      @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  statusHistory     OrderStatusHistory[]
+  notes             OrderNote[]
+  cancellations     OrderCancellation[]
+
+  @@unique([tenantId, orderNumber])
+  @@index([tenantId, customerId, createdAt])
+  @@index([tenantId, status, createdAt])
+  @@index([tenantId, guestEmail, createdAt])
+  @@index([tenantId, paymentStatus])
+  @@index([tenantId, fulfillmentStatus])
+  @@index([tenantId, updatedAt])
+  @@map("orders")
+}
+
+/// Customer lifecycle status
+enum CustomerStatus {
+  ACTIVE
+  INACTIVE
+  BLOCKED
+  ARCHIVED
+}
+
+/// Customer origin/source
+enum CustomerSource {
+  WEB
+  ADMIN
+  GUEST_CHECKOUT
+  IMPORT
+  MERCADO_LIBRE
+  TIENDANUBE
+  WOOCOMMERCE
+  MANUAL
+}
+
+/// Customer address type
+enum CustomerAddressType {
+  SHIPPING
+  BILLING
+  BOTH
+}
+
+model Customer {
+  id                String          @id @default(cuid())
+  tenantId          String
+  userId            String?
+  email             String
+  firstName         String
+  lastName          String
+  phone             String?
+  documentType      String?
+  documentNumber    String?
+  status            CustomerStatus   @default(ACTIVE)
+  source            CustomerSource   @default(WEB)
+  locale            String          @default("es-AR")
+  preferredCurrency String          @default("ARS")
+  acceptsMarketing  Boolean         @default(false)
+  emailVerified     Boolean         @default(false)
+  phoneVerified     Boolean         @default(false)
+  lastOrderAt       DateTime?
+  firstOrderAt      DateTime?
+  totalOrders       Int             @default(0)
+  totalSpent        Int             @default(0)
+  averageOrderValue Int             @default(0)
+  deletedAt         DateTime?
+  version           Int             @default(1)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  addresses         CustomerAddress[]
+  preferences       CustomerPreferences?
+  tags              CustomerTagAssignment[]
+  notes             CustomerNote[]
+  wishlists         Wishlist[]
+  orders            Order[]
+
+  @@unique([tenantId, email])
+  @@unique([tenantId, userId])
+  @@index([tenantId, status])
+  @@index([tenantId, source])
+  @@index([tenantId, createdAt])
+  @@index([tenantId, lastOrderAt])
+  @@index([tenantId, totalSpent])
+  @@map("customers")
+}
+
+model CustomerAddress {
+  id                String              @id @default(cuid())
+  tenantId          String
+  customerId        String
+  type              CustomerAddressType @default(SHIPPING)
+  label             String?
+  recipientName     String
+  phone             String?
+  street            String
+  number            String
+  apartment         String?
+  city              String
+  province          String
+  postalCode        String
+  country           String
+  notes             String?
+  isDefaultShipping Boolean             @default(false)
+  isDefaultBilling  Boolean             @default(false)
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  deletedAt         DateTime?
+
+  customer          Customer            @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, customerId])
+  @@index([tenantId, customerId, isDefaultShipping])
+  @@index([tenantId, customerId, isDefaultBilling])
+  @@map("customer_addresses")
+}
+
+model CustomerPreferences {
+  customerId            String  @id
+  language              String  @default("es")
+  currency              String  @default("ARS")
+  marketingEmail        Boolean @default(false)
+  marketingWhatsApp     Boolean @default(false)
+  marketingSms          Boolean @default(false)
+  orderNotifications    Boolean @default(true)
+  productRecommendations Boolean @default(false)
+  updatedAt             DateTime @updatedAt
+
+  customer              Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@map("customer_preferences")
+}
+
+model CustomerTag {
+  id          String   @id @default(cuid())
+  tenantId    String
+  name        String
+  slug        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  assignments CustomerTagAssignment[]
+
+  @@unique([tenantId, slug])
+  @@index([tenantId, name])
+  @@map("customer_tags")
+}
+
+model CustomerTagAssignment {
+  customerId String
+  tagId      String
+  assignedBy String
+  assignedAt DateTime @default(now())
+
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  tag        CustomerTag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([customerId, tagId])
+  @@index([tagId])
+  @@map("customer_tag_assignments")
+}
+
+model CustomerNote {
+  id          String   @id @default(cuid())
+  tenantId    String
+  customerId  String
+  content     String
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, customerId, createdAt])
+  @@index([tenantId, createdBy])
+  @@map("customer_notes")
+}
+
+/// Wishlist lifecycle status
+enum WishlistStatus {
+  ACTIVE
+  ARCHIVED
+  EXPIRED
+  DELETED
+}
+
+/// Wishlist item priority
+enum WishlistPriority {
+  LOW
+  NORMAL
+  HIGH
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  HIDDEN
+  ARCHIVED
+}
+
+enum ReviewVoteType {
+  HELPFUL
+  NOT_HELPFUL
+}
+
+model Wishlist {
+  id              String         @id @default(cuid())
+  tenantId        String
+  customerId      String?
+  guestTokenHash  String?
+  name            String
+  status          WishlistStatus @default(ACTIVE)
+  isDefault       Boolean        @default(false)
+  expiresAt       DateTime?
+  version         Int            @default(1)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  deletedAt       DateTime?
+
+  customer        Customer?      @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  items           WishlistItem[]
+
+  @@index([tenantId, customerId, status])
+  @@index([tenantId, guestTokenHash, status])
+  @@index([tenantId, customerId, isDefault])
+  @@index([tenantId, status, expiresAt])
+  @@index([tenantId, updatedAt])
+  @@map("wishlists")
+}
+
+model WishlistItem {
+  id              String            @id @default(cuid())
+  tenantId        String
+  wishlistId      String
+  productId       String
+  productVariantId String?
+  sku             String?
+  itemKey         String
+  note            String?
+  priority        WishlistPriority  @default(NORMAL)
+  addedAt         DateTime          @default(now())
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  deletedAt       DateTime?
+
+  wishlist        Wishlist          @relation(fields: [wishlistId], references: [id], onDelete: Cascade)
+
+  @@unique([wishlistId, itemKey])
+  @@index([tenantId, wishlistId])
+  @@index([tenantId, productId])
+  @@index([tenantId, productVariantId])
+  @@index([tenantId, sku])
+  @@index([tenantId, addedAt])
+  @@map("wishlist_items")
+}
+
+model ProductReview {
+  id                String       @id @default(cuid())
+  tenantId          String
+  productId         String
+  productVariantId  String?
+  customerId        String
+  orderId           String?
+  orderItemId       String?
+  rating            Int
+  title             String?
+  content           String
+  status            ReviewStatus @default(PENDING)
+  isVerifiedPurchase Boolean     @default(false)
+  publishedAt       DateTime?
+  rejectedAt        DateTime?
+  rejectionReason   String?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  deletedAt         DateTime?
+  version           Int          @default(1)
+
+  @@unique([tenantId, customerId, productId])
+  @@index([tenantId, productId, status, createdAt])
+  @@index([tenantId, customerId, createdAt])
+  @@index([tenantId, orderId])
+  @@index([tenantId, orderItemId])
+  @@index([tenantId, rating])
+  @@index([tenantId, isVerifiedPurchase])
+  @@map("product_reviews")
+}
+
+model ReviewResponse {
+  id          String   @id @default(cuid())
+  tenantId    String
+  reviewId    String   @unique
+  content     String
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime?
+  deletedAt   DateTime?
+
+  @@index([tenantId, reviewId])
+  @@map("review_responses")
+}
+
+model ReviewVote {
+  id                 String         @id @default(cuid())
+  tenantId           String
+  reviewId           String
+  customerId         String?
+  guestFingerprintHash String?
+  actorKey           String
+  vote               ReviewVoteType
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  @@unique([tenantId, reviewId, actorKey])
+  @@index([tenantId, reviewId, vote])
+  @@index([tenantId, customerId])
+  @@map("review_votes")
+}
+
+model ProductReviewSummary {
+  tenantId           String
+  productId          String
+  averageRating      Decimal  @db.Decimal(10, 2)
+  totalReviews       Int
+  rating1Count       Int
+  rating2Count       Int
+  rating3Count       Int
+  rating4Count       Int
+  rating5Count       Int
+  verifiedReviewsCount Int
+  updatedAt          DateTime @updatedAt
+  version            Int      @default(1)
+
+  @@id([tenantId, productId])
+  @@index([tenantId, averageRating])
+  @@index([tenantId, totalReviews])
+  @@map("product_review_summaries")
+}
+
+/// Order item (snapshot at purchase time)
+model OrderItem {
+  id                  String   @id @default(cuid())
+  orderId             String
+  productVariantId    String
+  sku                 String
+  productNameSnapshot String
+  variantNameSnapshot String?
+  quantity            Int
+  unitPrice           Int
+  subtotal            Int
+
+  createdAt           DateTime @default(now())
+
+  order               Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([productVariantId])
+  @@index([sku])
+  @@map("order_items")
+}
+
+/// Immutable order status change history
+model OrderStatusHistory {
+  id          String      @id @default(cuid())
+  tenantId    String
+  orderId     String
+  fromStatus  String?
+  toStatus    String
+  reason      String?
+  metadata    Json?
+  changedByType String
+  changedById   String?
+
+  createdAt   DateTime    @default(now())
+
+  order       Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, orderId, createdAt])
+  @@index([tenantId, toStatus, createdAt])
+  @@map("order_status_history")
+}
+
+/// Internal or customer-visible notes on an order
+model OrderNote {
+  id          String    @id @default(cuid())
+  tenantId    String
+  orderId     String
+  content     String
+  visibility  String    @default("INTERNAL")
+  createdBy   String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  order       Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, orderId, createdAt])
+  @@index([tenantId, visibility])
+  @@index([tenantId, createdBy])
+  @@map("order_notes")
+}
+
+/// Cancellation request/record for an order
+model OrderCancellation {
+  id              String    @id @default(cuid())
+  tenantId        String
+  orderId         String
+  type            String    @default("FULL")
+  reasonCode      String
+  reasonText      String?
+  status          String    @default("COMPLETED")
+  requestedByType String
+  requestedById   String?
+  approvedBy      String?
+  requestedAt     DateTime  @default(now())
+  approvedAt      DateTime?
+  completedAt     DateTime?
+  metadata        Json?
+
+  order           Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, orderId])
+  @@index([tenantId, status, requestedAt])
+  @@map("order_cancellations")
+}
+
+/// Idempotency tracking
+model IdempotencyRecord {
+  id          String   @id @default(cuid())
+  tenantId    String
+  key         String
+  operation   String
+  payloadHash String
+  response    Json?
+  createdAt   DateTime @default(now())
+
+  @@unique([tenantId, key, operation])
+  @@index([tenantId, createdAt])
+  @@map("idempotency_records")
+}

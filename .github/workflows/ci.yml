@@ -1,0 +1,92 @@
+name: CI
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '9.15.0'
+
+jobs:
+  quality:
+    name: Quality Gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: ./.github/actions/setup
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          pnpm-version: ${{ env.PNPM_VERSION }}
+          generate-prisma: 'true'
+      - uses: ./.github/actions/quality
+        with:
+          run-arch: 'true'
+          run-circular: 'true'
+      - uses: ./.github/actions/cache
+        with:
+          key-prefix: ${{ github.run_id }}
+          save-pnpm: 'true'
+          save-turbo: 'true'
+
+  test:
+    name: Tests
+    needs: [quality]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: ./.github/actions/setup
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          pnpm-version: ${{ env.PNPM_VERSION }}
+          generate-prisma: 'true'
+      - uses: ./.github/actions/test
+        with:
+          run-unit: 'true'
+          run-integration: 'false'
+          run-e2e: 'false'
+          coverage: 'true'
+          upload-artifacts: 'true'
+
+  build:
+    name: Build
+    needs: [quality]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: ./.github/actions/setup
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          pnpm-version: ${{ env.PNPM_VERSION }}
+          generate-prisma: 'true'
+      - uses: ./.github/actions/build
+        with:
+          upload-artifacts: 'true'
+
+  security:
+    name: Security Scan
+    needs: [quality]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: ./.github/actions/setup
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          pnpm-version: ${{ env.PNPM_VERSION }}
+      - name: pnpm audit
+        continue-on-error: true
+        run: pnpm audit --audit-level=high
+      - name: Check for secrets
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Secret scanning
+        uses: trufflesecurity/trufflehog@v3
+        with:
+          extra_args: --only-verified

@@ -1,0 +1,20 @@
+{
+  "name": "@tienda/eslint-config",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "main": "src/base.js",
+  "files": ["src"],
+  "dependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.16.0",
+    "@typescript-eslint/parser": "^8.16.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-import": "^2.31.0"
+  },
+  "peerDependencies": {
+    "eslint": "^9.15.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

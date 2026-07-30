@@ -1,0 +1,40 @@
+graph TB
+    subgraph Clients
+        WEB[Navegador Web]
+        MOBILE[App Móvil]
+        APIEXT[API Externa]
+    end
+    subgraph CDN
+        CF[Cloudflare]
+    end
+    subgraph FE
+        NEXT[Next.js 15 App Router]
+    end
+    subgraph BE
+        GW[API Gateway NestJS]
+        MOD[Módulos de Negocio<br/>14 Contextos]
+        CORE[Módulos Core<br/>10 Infraestructura]
+    end
+    subgraph QUEUE
+        BULL[BullMQ]
+        WORK[Workers]
+    end
+    subgraph DATA
+        PG[(PostgreSQL 16)]
+        RD[(Redis 7)]
+        S3[(Cloudflare R2)]
+    end
+    WEB --> CF
+    MOBILE --> CF
+    APIEXT --> CF
+    CF --> NEXT
+    CF --> GW
+    NEXT --> GW
+    GW --> MOD
+    MOD --> CORE
+    MOD --> BULL
+    BULL --> WORK
+    WORK --> CORE
+    MOD --> PG
+    CORE --> RD
+    CORE --> S3

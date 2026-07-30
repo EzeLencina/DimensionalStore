@@ -1,0 +1,60 @@
+{
+  "version": "5.22.0",
+  "steps": [
+    {
+      "tag": "CreateEnum",
+      "enum": "ProductType",
+      "values": ["PHYSICAL", "DIGITAL", "SERVICE", "BUNDLE"]
+    },
+    {
+      "tag": "CreateEnum",
+      "enum": "ProductStatus",
+      "values": ["DRAFT", "ACTIVE", "INACTIVE", "ARCHIVED"]
+    },
+    {
+      "tag": "CreateEnum",
+      "enum": "ProductVisibility",
+      "values": ["PUBLIC", "PRIVATE", "HIDDEN"]
+    },
+    {
+      "tag": "CreateEnum",
+      "enum": "ProductCondition",
+      "values": ["NEW", "REFURBISHED", "USED"]
+    },
+    {
+      "tag": "CreateTable",
+      "table": "products",
+      "columns": [
+        { "name": "id", "type": "Text", "default": { "name": "cuid" } },
+        { "name": "tenantId", "type": "Text" },
+        { "name": "organizationId", "type": "Text", "optional": true },
+        { "name": "name", "type": "Text" },
+        { "name": "slug", "type": "Text" },
+        { "name": "shortDescription", "type": "Text", "optional": true },
+        { "name": "description", "type": "Text", "optional": true },
+        { "name": "productType", "type": "ProductType", "default": "PHYSICAL" },
+        { "name": "status", "type": "ProductStatus", "default": "DRAFT" },
+        { "name": "visibility", "type": "ProductVisibility", "default": "PUBLIC" },
+        { "name": "condition", "type": "ProductCondition", "default": "NEW" },
+        { "name": "warrantyMonths", "type": "Int", "optional": true },
+        { "name": "seoTitle", "type": "Text", "optional": true },
+        { "name": "seoDescription", "type": "Text", "optional": true },
+        { "name": "deletedAt", "type": "DateTime", "optional": true },
+        { "name": "version", "type": "Int", "default": 1 },
+        { "name": "createdAt", "type": "DateTime", "default": "now" },
+        { "name": "updatedAt", "type": "DateTime" }
+      ],
+      "uniqueConstraints": [
+        { "name": "products_tenantId_slug_key", "columns": ["tenantId", "slug"] }
+      ],
+      "indexes": [
+        { "name": "products_tenantId_idx", "columns": ["tenantId"] },
+        { "name": "products_tenantId_status_idx", "columns": ["tenantId", "status"] },
+        { "name": "products_tenantId_visibility_idx", "columns": ["tenantId", "visibility"] },
+        { "name": "products_tenantId_createdAt_idx", "columns": ["tenantId", "createdAt"] },
+        { "name": "products_tenantId_updatedAt_idx", "columns": ["tenantId", "updatedAt"] },
+        { "name": "products_tenantId_deletedAt_idx", "columns": ["tenantId", "deletedAt"] }
+      ]
+    }
+  ]
+}

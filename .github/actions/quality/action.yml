@@ -1,0 +1,52 @@
+name: 'Quality Gates'
+description: 'Run ESLint, TypeScript check, Prettier format check, and architecture validations'
+
+inputs:
+  run-lint:
+    description: 'Whether to run ESLint'
+    required: false
+    default: 'true'
+  run-typecheck:
+    description: 'Whether to run TypeScript check'
+    required: false
+    default: 'true'
+  run-format:
+    description: 'Whether to run Prettier format check'
+    required: false
+    default: 'true'
+  run-arch:
+    description: 'Whether to run architecture validation'
+    required: false
+    default: 'false'
+  run-circular:
+    description: 'Whether to check circular dependencies'
+    required: false
+    default: 'false'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: ESLint
+      if: inputs.run-lint == 'true'
+      shell: bash
+      run: pnpm lint
+
+    - name: TypeScript check
+      if: inputs.run-typecheck == 'true'
+      shell: bash
+      run: pnpm typecheck
+
+    - name: Prettier format check
+      if: inputs.run-format == 'true'
+      shell: bash
+      run: pnpm format:check
+
+    - name: Check circular dependencies
+      if: inputs.run-circular == 'true'
+      shell: bash
+      run: node scripts/check-circular-deps.mjs
+
+    - name: Check architecture rules
+      if: inputs.run-arch == 'true'
+      shell: bash
+      run: node scripts/check-arch-rules.mjs

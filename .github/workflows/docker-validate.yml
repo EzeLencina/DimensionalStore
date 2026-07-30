@@ -1,0 +1,91 @@
+name: Docker Validation
+on:
+  pull_request:
+    paths:
+      - 'docker/**'
+      - '.dockerignore'
+      - 'Dockerfile*'
+      - 'docker-compose*.yml'
+  push:
+    branches: [main, develop]
+    paths:
+      - 'docker/**'
+      - '.dockerignore'
+      - 'Dockerfile*'
+      - 'docker-compose*.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '9.15.0'
+
+jobs:
+  lint:
+    name: Dockerfile Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lint Dockerfiles
+        uses: hadolint/hadolint-action@v3
+        with:
+          dockerfile: docker/backend/Dockerfile
+          failure-threshold: warning
+      - name: Lint frontend Dockerfile
+        uses: hadolint/hadolint-action@v3
+        with:
+          dockerfile: docker/frontend/Dockerfile
+          failure-threshold: warning
+
+  build-backend:
+    name: Build Backend Image
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/backend/Dockerfile
+          target: deps
+          load: true
+          tags: tienda/backend:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  build-frontend:
+    name: Build Frontend Image
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/frontend/Dockerfile
+          target: deps
+          load: true
+          tags: tienda/frontend:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  compose-validate:
+    name: Validate Compose Files
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate dev compose
+        run: docker compose -f docker/dev/docker-compose.yml config --quiet
+      - name: Validate prod compose
+        run: docker compose -f docker/prod/docker-compose.yml config --quiet

@@ -1,0 +1,45 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+*.tsbuildinfo
+
+# Environment
+.env
+.env.*
+!.env.example
+!.env.docker.example
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Turbo
+.turbo/
+
+# Testing
+coverage/
+
+# Docker
+docker-compose.override.yml
+
+# Prisma
+packages/database/prisma/migrations/*
+!packages/database/prisma/migrations/.gitkeep
+!packages/database/prisma/migrations/**

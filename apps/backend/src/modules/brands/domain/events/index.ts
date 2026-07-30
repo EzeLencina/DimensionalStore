@@ -1,0 +1,10 @@
+export { DomainEvent } from './domain-event';
+export { BrandCreatedEvent } from './brand-created.event';
+export { BrandRenamedEvent } from './brand-renamed.event';
+export { BrandActivatedEvent } from './brand-activated.event';
+export { BrandDeactivatedEvent } from './brand-deactivated.event';
+export { BrandArchivedEvent } from './brand-archived.event';
+export { BrandRestoredEvent } from './brand-restored.event';
+export { BrandVisibilityChangedEvent } from './brand-visibility-changed.event';
+export { BrandSeoUpdatedEvent } from './brand-seo-updated.event';
+export { BrandDeletedEvent } from './brand-deleted.event';

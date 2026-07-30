@@ -1,0 +1,1 @@
+export class MoveWishlistItemToCartCommand { constructor(public readonly tenantId: string, public readonly wishlistId: string, public readonly itemId: string, public readonly customerId: string | null) {} }

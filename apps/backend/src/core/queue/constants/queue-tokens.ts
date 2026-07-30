@@ -1,0 +1,8 @@
+export const QUEUE_TOKENS = {
+  CONFIG: Symbol('QUEUE_CONFIG'),
+  CONNECTION: Symbol('QUEUE_CONNECTION'),
+  MANAGER: Symbol('QUEUE_MANAGER'),
+  SERVICE: Symbol('QUEUE_SERVICE'),
+  HEALTH: Symbol('QUEUE_HEALTH'),
+  BULL_CONNECTION: Symbol('BULL_CONNECTION'),
+} as const;

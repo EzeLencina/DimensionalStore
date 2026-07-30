@@ -1,0 +1,10 @@
+export { WarehouseId } from './warehouse-id';
+export { WarehouseCode } from './warehouse-code';
+export { InventoryItemId } from './inventory-item-id';
+export { StockQuantity } from './stock-quantity';
+export { ReservationId } from './reservation-id';
+export { MovementId } from './movement-id';
+export { StockMovement } from './stock-movement.vo';
+export type { MovementTypeValue } from './stock-movement.vo';
+export { StockReservation } from './stock-reservation.vo';
+export type { ReservationStatusValue } from './stock-reservation.vo';

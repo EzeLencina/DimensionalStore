@@ -1,0 +1,15 @@
+export const API_DEFAULTS = {
+  VERSION: '1.0',
+  VERSIONING_TYPE: 'uri',
+  SUPPORTED_VERSIONS: ['1.0'],
+  DEFAULT_PAGE: 1,
+  DEFAULT_LIMIT: 20,
+  MAX_LIMIT: 100,
+  DEFAULT_SORT_DIRECTION: 'ASC',
+  DEFAULT_RESPONSE_FORMAT: 'json',
+  EXECUTION_TIME_WARN_THRESHOLD: 1000,
+  REQUEST_ID_HEADER: 'x-request-id',
+  CORRELATION_ID_HEADER: 'x-correlation-id',
+  VERSION_HEADER: 'x-api-version',
+  API_PREFIX: 'api',
+} as const;

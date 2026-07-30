@@ -1,0 +1,18 @@
+export const MAIL_DEFAULTS = {
+  PORT: 587,
+  TLS: true,
+  TIMEOUT: 10_000,
+  MAX_CONNECTIONS: 5,
+  POOL: true,
+  RETRY_ATTEMPTS: 3,
+  RETRY_DELAY: 1000,
+  RATE_LIMIT: 10,
+  RATE_LIMIT_INTERVAL: 1000,
+  FROM_NAME: 'Tienda',
+  FROM_ADDRESS: 'noreply@tienda.local',
+  TEMPLATE_ENGINE: 'simple',
+  MAX_BULK_SIZE: 50,
+  BCC_LIMIT: 50,
+  ATTACHMENT_SIZE_LIMIT: 10 * 1024 * 1024,
+  SUBJECT_MAX_LENGTH: 255,
+} as const;

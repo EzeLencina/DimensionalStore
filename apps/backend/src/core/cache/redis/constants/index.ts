@@ -1,0 +1,64 @@
+import type { RedisNamespace } from '../types';
+
+export const REDIS_TOKENS = {
+  CONNECTION: Symbol('REDIS_CONNECTION'),
+  DEFAULT_CLIENT: Symbol('REDIS_DEFAULT_CLIENT'),
+  SUBSCRIBER_CLIENT: Symbol('REDIS_SUBSCRIBER_CLIENT'),
+  SERVICE: Symbol('REDIS_SERVICE'),
+  CONFIG: Symbol('REDIS_CONFIG'),
+  HEALTH: Symbol('REDIS_HEALTH'),
+} as const;
+
+export const REDIS_ERROR_CODES = {
+  CONNECTION_REFUSED: 'REDIS_001',
+  CONNECTION_TIMEOUT: 'REDIS_002',
+  CONNECTION_CLOSED: 'REDIS_003',
+  MAX_RETRIES_EXCEEDED: 'REDIS_004',
+  AUTH_FAILED: 'REDIS_005',
+  SERIALIZATION_ERROR: 'REDIS_006',
+  DESERIALIZATION_ERROR: 'REDIS_007',
+  COMMAND_FAILED: 'REDIS_008',
+  KEY_NOT_FOUND: 'REDIS_009',
+  PIPELINE_FAILED: 'REDIS_010',
+  TRANSACTION_FAILED: 'REDIS_011',
+  PUBSUB_ERROR: 'REDIS_012',
+  SCRIPT_ERROR: 'REDIS_013',
+  READONLY: 'REDIS_014',
+  LOADING: 'REDIS_015',
+  OUT_OF_MEMORY: 'REDIS_016',
+  CLUSTER_DOWN: 'REDIS_017',
+  MASTER_DOWN: 'REDIS_018',
+  CONFIG_ERROR: 'REDIS_019',
+  UNSUPPORTED_OPERATION: 'REDIS_020',
+} as const;
+
+export const REDIS_DEFAULT_TTL = {
+  SHORT: 60,
+  MEDIUM: 300,
+  LONG: 3600,
+  VERY_LONG: 86400,
+  SESSION: 7200,
+  LOCK: 30,
+  RATE_LIMIT_WINDOW: 60,
+  QUEUE_JOB: 604800,
+} as const;
+
+export const REDIS_NAMESPACE_SEPARATOR = ':';
+
+export const NAMESPACE_MAP: Record<RedisNamespace, string> = {
+  app: 'app',
+  cache: 'cache',
+  queue: 'queue',
+  session: 'session',
+  lock: 'lock',
+  config: 'config',
+  'rate-limit': 'rate',
+  pubsub: 'pubsub',
+  future: 'fut',
+};
+
+export const REDIS_HEALTH_CHECK_INTERVAL = 30_000;
+
+export const REDIS_DEFAULT_CONNECTION_NAME = 'default';
+
+export const REDIS_SUBSCRIBER_CONNECTION_NAME = 'subscriber';

@@ -1,0 +1,8 @@
+{
+  "extends": "@tienda/tsconfig/src/react.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src"
+  },
+  "include": ["src"]
+}

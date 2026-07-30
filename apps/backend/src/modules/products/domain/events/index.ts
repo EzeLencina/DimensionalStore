@@ -1,0 +1,10 @@
+export { DomainEvent } from './domain-event';
+export { ProductCreatedEvent } from './product-created.event';
+export { ProductRenamedEvent } from './product-renamed.event';
+export { ProductActivatedEvent } from './product-activated.event';
+export { ProductDeactivatedEvent } from './product-deactivated.event';
+export { ProductArchivedEvent } from './product-archived.event';
+export { ProductRestoredEvent } from './product-restored.event';
+export { ProductVisibilityChangedEvent } from './product-visibility-changed.event';
+export { ProductSeoUpdatedEvent } from './product-seo-updated.event';
+export { ProductDeletedEvent } from './product-deleted.event';

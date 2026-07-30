@@ -1,0 +1,12 @@
+export type ProductReviewSummaryPrimitives = { tenantId: string; productId: string; averageRating: string; totalReviews: number; rating1Count: number; rating2Count: number; rating3Count: number; rating4Count: number; rating5Count: number; verifiedReviewsCount: number; updatedAt: Date; version: number };
+
+export class ProductReviewSummary {
+  constructor(private tenantId: string, private productId: string, private averageRating: number, private totalReviews: number, private rating1Count: number, private rating2Count: number, private rating3Count: number, private rating4Count: number, private rating5Count: number, private verifiedReviewsCount: number, private updatedAt: Date = new Date(), private version: number = 1) {}
+  static empty(tenantId: string, productId: string): ProductReviewSummary { return new ProductReviewSummary(tenantId, productId, 0, 0, 0, 0, 0, 0, 0, 0); }
+  static fromPrimitives(p: ProductReviewSummaryPrimitives): ProductReviewSummary { return new ProductReviewSummary(p.tenantId, p.productId, Number(p.averageRating), p.totalReviews, p.rating1Count, p.rating2Count, p.rating3Count, p.rating4Count, p.rating5Count, p.verifiedReviewsCount, p.updatedAt, p.version); }
+  toPrimitives(): ProductReviewSummaryPrimitives { return { tenantId: this.tenantId, productId: this.productId, averageRating: this.averageRating.toFixed(2), totalReviews: this.totalReviews, rating1Count: this.rating1Count, rating2Count: this.rating2Count, rating3Count: this.rating3Count, rating4Count: this.rating4Count, rating5Count: this.rating5Count, verifiedReviewsCount: this.verifiedReviewsCount, updatedAt: this.updatedAt, version: this.version }; }
+  recalculate(reviews: Array<{ rating: number; isVerifiedPurchase: boolean }>): void { const counts: [number, number, number, number, number] = [0, 0, 0, 0, 0]; let verified = 0; let sum = 0; for (const review of reviews) { if (review.rating >= 1 && review.rating <= 5) { counts[review.rating - 1]!++; sum += review.rating; } if (review.isVerifiedPurchase) verified++; } this.totalReviews = reviews.length; this.rating1Count = counts[0]!; this.rating2Count = counts[1]!; this.rating3Count = counts[2]!; this.rating4Count = counts[3]!; this.rating5Count = counts[4]!; this.verifiedReviewsCount = verified; this.averageRating = reviews.length > 0 ? sum / reviews.length : 0; this.updatedAt = new Date(); this.version++; }
+  getTenantId(): string { return this.tenantId; }
+  getProductId(): string { return this.productId; }
+  getAverageRating(): number { return this.averageRating; }
+}

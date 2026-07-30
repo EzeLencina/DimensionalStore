@@ -1,0 +1,15 @@
+export const CUSTOMER_PERMISSIONS = {
+  CREATE: 'customers.create',
+  READ: 'customers.read',
+  READ_OWN: 'customers.read-own',
+  UPDATE: 'customers.update',
+  UPDATE_OWN: 'customers.update-own',
+  BLOCK: 'customers.block',
+  ARCHIVE: 'customers.archive',
+  ADDRESSES: 'customers.addresses',
+  PREFERENCES: 'customers.preferences',
+  TAGS: 'customers.tags',
+  NOTES: 'customers.notes',
+  METRICS: 'customers.metrics',
+  MANAGE: 'customers.manage',
+} as const;

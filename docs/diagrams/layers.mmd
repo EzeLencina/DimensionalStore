@@ -1,0 +1,30 @@
+graph TD
+    subgraph Presentation["Presentation Layer"]
+        CTRL[Controller]
+        DTO[DTOs]
+        PIPE[Pipes]
+    end
+    subgraph Application["Application Layer"]
+        CMD[Commands]
+        QRY[Queries]
+        HND[Handlers]
+        SRV[Services]
+    end
+    subgraph Domain["Domain Layer"]
+        ENT[Entities]
+        VO[Value Objects]
+        REP[Repository Interfaces]
+        EVT[Domain Events]
+        SPEC[Specifications]
+    end
+    subgraph Infrastructure["Infrastructure Layer"]
+        RPO[Prisma Repositories]
+        EXT[External Integrations]
+        CACH[Cache Implementations]
+        HTTP[HTTP Clients]
+    end
+    Presentation -->|depende de| Application
+    Application -->|define use cases| Domain
+    Infrastructure -->|implementa| Domain
+    Presentation -.->|NUNCA| Infrastructure
+    Application -.->|NUNCA directamente| Infrastructure

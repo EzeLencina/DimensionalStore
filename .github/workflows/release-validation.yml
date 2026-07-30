@@ -1,0 +1,85 @@
+name: Release Validation
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version'
+        required: true
+        type: string
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '9.15.0'
+
+jobs:
+  validate:
+    name: Validate Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: ./.github/actions/setup
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          pnpm-version: ${{ env.PNPM_VERSION }}
+          generate-prisma: 'true'
+
+      - uses: ./.github/actions/quality
+        with:
+          run-arch: 'true'
+          run-circular: 'true'
+
+      - name: Full test suite
+        run: pnpm test
+        env:
+          NODE_ENV: test
+
+      - uses: ./.github/actions/build
+
+  docker:
+    name: Build Docker Images
+    needs: [validate]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build backend production image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/backend/Dockerfile
+          load: true
+          tags: tienda/backend:${{ github.ref_name }}
+          cache-from: type=gha
+      - name: Build frontend production image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/frontend/Dockerfile
+          load: true
+          tags: tienda/frontend:${{ github.ref_name }}
+          cache-from: type=gha
+
+  tag-version:
+    name: Version Consistency
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check tag matches package
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          ROOT_VERSION=$(node -p "require('./package.json').version")
+          if [ "$TAG_VERSION" != "$ROOT_VERSION" ]; then
+            echo "Tag version ($TAG_VERSION) does not match package.json ($ROOT_VERSION)"
+            exit 1
+          fi
+          echo "Version check passed: v$ROOT_VERSION"

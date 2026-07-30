@@ -1,0 +1,37 @@
+name: 'Cache Management'
+description: 'Save and restore caches for pnpm, Turbo, and build outputs'
+
+inputs:
+  key-prefix:
+    description: 'Prefix for cache keys'
+    required: false
+    default: 'v1'
+  save-pnpm:
+    description: 'Whether to save pnpm cache'
+    required: false
+    default: 'false'
+  save-turbo:
+    description: 'Whether to save turbo cache'
+    required: false
+    default: 'false'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Save pnpm store cache
+      if: inputs.save-pnpm == 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: |
+          ~/.local/share/pnpm/store
+          .pnpm-store
+        key: ${{ inputs.key-prefix }}-${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+
+    - name: Save Turbo cache
+      if: inputs.save-turbo == 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: |
+          .turbo
+          **/.turbo
+        key: ${{ inputs.key-prefix }}-${{ runner.os }}-turbo-${{ github.sha }}

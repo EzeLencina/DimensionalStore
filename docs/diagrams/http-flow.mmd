@@ -1,0 +1,37 @@
+sequenceDiagram
+    participant C as Cliente
+    participant P as Proxy/CDN
+    participant S as Security Middleware
+    participant R as Router NestJS
+    participant G as Guards
+    participant I as Interceptors
+    participant Pi as Pipes
+    participant H as Handler
+    participant SR as Service
+    participant RP as Repository
+    participant DB as Database
+
+    C->>P: HTTP Request
+    P->>S: Trusted Proxy
+    S->>S: Compression
+    S->>S: Request Limits
+    S->>S: Security Headers
+    S->>S: Helmet (CSP, HSTS)
+    S->>S: CORS
+    S->>S: Rate Limiting
+    S->>R: Request
+    R->>G: Guards
+    G->>I: Interceptors
+    I->>Pi: Pipes (validación)
+    Pi->>H: Handler
+    H->>SR: Service
+    SR->>RP: Repository Interface
+    RP->>DB: Prisma Query
+    DB-->>RP: Result
+    RP-->>SR: Domain Entity
+    SR-->>H: Response
+    H-->>I: Return
+    I-->>I: ResponseFormatInterceptor
+    I-->>I: ExecutionTimeInterceptor
+    I-->>I: ApiVersionInterceptor
+    I-->>C: HTTP Response

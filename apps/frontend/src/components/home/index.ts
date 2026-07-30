@@ -1,0 +1,10 @@
+export { Hero } from './hero';
+export { Categories } from './categories';
+export { FeaturedProducts } from './featured-products';
+export { Deals } from './deals';
+export { Brands } from './brands';
+export { Benefits } from './benefits';
+export { Promotions } from './promotions';
+export { Testimonials } from './testimonials';
+export { Faq } from './faq';
+export { Cta } from './cta';

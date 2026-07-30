@@ -1,0 +1,22 @@
+export type CategoryResponseDto = {
+  id: string;
+  tenantId: string;
+  parentId: string | null;
+  name: string;
+  slug: string;
+  description: string | null;
+  shortDescription: string | null;
+  status: string;
+  visibility: string;
+  displayOrder: number;
+  icon: string | null;
+  image: string | null;
+  seoTitle: string | null;
+  seoDescription: string | null;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+  version: number;
+  childrenCount?: number;
+  productCount?: number;
+};

@@ -1,0 +1,16 @@
+export const CATALOG_PERMISSIONS = {
+  CATEGORY_CREATE: 'categories.create',
+  CATEGORY_READ: 'categories.read',
+  CATEGORY_UPDATE: 'categories.update',
+  CATEGORY_ARCHIVE: 'categories.archive',
+  CATEGORY_RESTORE: 'categories.restore',
+  CATEGORY_DELETE: 'categories.delete',
+  CATEGORY_MANAGE: 'categories.manage',
+  COLLECTION_CREATE: 'collections.create',
+  COLLECTION_READ: 'collections.read',
+  COLLECTION_UPDATE: 'collections.update',
+  COLLECTION_ARCHIVE: 'collections.archive',
+  COLLECTION_RESTORE: 'collections.restore',
+  COLLECTION_DELETE: 'collections.delete',
+  COLLECTION_MANAGE: 'collections.manage',
+} as const;

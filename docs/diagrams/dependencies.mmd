@@ -1,0 +1,61 @@
+graph LR
+    subgraph CORE[Módulos Core]
+        LOG[Logger]
+        DB[Database]
+        CACHE[Cache]
+        EVT[EventBus]
+        QUEUE[Queue]
+        STORE[Storage]
+        MAIL[Mail]
+        HTTP[Http]
+        API[Api]
+        SEC[Security]
+    end
+    subgraph MODULES[Módulos Negocio - Planificados]
+        AUTH[Identity]
+        CAT[Catalog]
+        INV[Inventory]
+        SAL[Sales]
+        PUR[Purchasing]
+        CUST[Customers]
+        SUP[Suppliers]
+        FIN[Finance]
+        CRM[CRM]
+        MKT[Marketing]
+        CMS[CMS]
+        NOTIF[Notifications]
+        AUDIT[Audit]
+    end
+    AUTH --> DB
+    AUTH --> CACHE
+    AUTH --> SEC
+    CAT --> DB
+    CAT --> CACHE
+    CAT --> STORE
+    INV --> DB
+    INV --> CACHE
+    INV --> CAT
+    SAL --> DB
+    SAL --> CACHE
+    SAL --> CAT
+    SAL --> INV
+    SAL --> FIN
+    SAL --> QUEUE
+    SAL --> EVT
+    PUR --> DB
+    PUR --> CAT
+    PUR --> INV
+    PUR --> SUP
+    FIN --> DB
+    FIN --> QUEUE
+    CRM --> DB
+    CRM --> CUST
+    MKT --> DB
+    MKT --> SAL
+    MKT --> CAT
+    CMS --> DB
+    CMS --> STORE
+    NOTIF --> QUEUE
+    NOTIF --> MAIL
+    AUDIT --> QUEUE
+    AUDIT --> DB

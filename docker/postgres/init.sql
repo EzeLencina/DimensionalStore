@@ -1,0 +1,2 @@
+-- Initialization scripts go here (future phases)
+-- This file is mounted to /docker-entrypoint-initdb.d/

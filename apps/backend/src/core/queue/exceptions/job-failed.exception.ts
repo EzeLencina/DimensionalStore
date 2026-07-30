@@ -1,0 +1,12 @@
+import { AppException } from '@common/exceptions/app.exception';
+import { QUEUE_ERROR_CODES } from '../constants/queue-error-codes';
+
+export class JobFailedException extends AppException {
+  constructor(
+    message = 'Job failed during execution',
+    details: Record<string, unknown> | null = null,
+  ) {
+    super(QUEUE_ERROR_CODES.JOB_FAILED, message, 500, details);
+    this.name = 'JobFailedException';
+  }
+}

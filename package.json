@@ -1,0 +1,28 @@
+{
+  "name": "tienda",
+  "private": true,
+  "description": "Plataforma integral ERP + Ecommerce + CRM",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "test": "turbo test",
+    "typecheck": "turbo typecheck",
+    "format": "prettier --write \"**/*.{ts,tsx,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,json,md}\"",
+    "clean": "turbo clean && rm -rf node_modules",
+    "setup": "pnpm install && pnpm build"
+  },
+  "devDependencies": {
+    "@tienda/eslint-config": "workspace:*",
+    "@tienda/typescript-config": "workspace:*",
+    "prettier": "^3.4.2",
+    "turbo": "^2.3.3",
+    "typescript": "^5.6.3"
+  },
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=20.17.0",
+    "pnpm": ">=9.0.0"
+  }
+}

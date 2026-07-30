@@ -1,0 +1,56 @@
+name: 'Run Tests'
+description: 'Execute tests with coverage and upload reports'
+
+inputs:
+  run-unit:
+    description: 'Whether to run unit tests'
+    required: false
+    default: 'true'
+  run-integration:
+    description: 'Whether to run integration tests'
+    required: false
+    default: 'false'
+  run-e2e:
+    description: 'Whether to run e2e tests'
+    required: false
+    default: 'false'
+  coverage:
+    description: 'Whether to collect coverage'
+    required: false
+    default: 'true'
+  upload-artifacts:
+    description: 'Whether to upload test artifacts'
+    required: false
+    default: 'false'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Unit Tests
+      if: inputs.run-unit == 'true'
+      shell: bash
+      run: pnpm test
+      env:
+        NODE_ENV: test
+
+    - name: Upload coverage
+      if: inputs.upload-artifacts == 'true' && inputs.coverage == 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: |
+          apps/backend/coverage/
+          apps/frontend/coverage/
+        if-no-files-found: ignore
+        retention-days: 7
+
+    - name: Upload test results
+      if: inputs.upload-artifacts == 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results
+        path: |
+          apps/backend/junit.xml
+          apps/frontend/junit.xml
+        if-no-files-found: ignore
+        retention-days: 7

@@ -1,0 +1,10 @@
+export const TENANT_CONSTANTS = {
+  CONTEXT_TTL_SECONDS: 300,
+  DEFAULT_LOCALE: 'es_AR',
+  DEFAULT_TIMEZONE: 'America/Argentina/Buenos_Aires',
+  DEFAULT_CURRENCY: 'ARS',
+  DEFAULT_LANGUAGE: 'es',
+  MAX_TENANTS_PER_USER: 10,
+  MAX_BRANCHES_PER_TENANT: 50,
+  CONTEXT_PREFIX: 'tenant_context:',
+} as const;

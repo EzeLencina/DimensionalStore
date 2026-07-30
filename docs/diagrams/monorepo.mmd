@@ -1,0 +1,51 @@
+graph TD
+    subgraph ROOT["/ (Raíz)"]
+        TURBO[turbo.json]
+        PNPM[pnpm-workspace.yaml]
+        PKG[package.json]
+    end
+    subgraph APPS["apps/"]
+        BE["backend/ (NestJS)"]
+        FE["frontend/ (Next.js 15)"]
+    end
+    subgraph PACKAGES["packages/"]
+        CONFIG["config - Zod env"]
+        DB["database - Prisma"]
+        LOG["logger - Pino"]
+        Q["queue - Abstracciones"]
+        TEST["testing - Factories/Mocks"]
+        UI["ui - Componentes React"]
+        SHARED["shared - Tipos compartidos"]
+        TYPES["types - Tipos TS"]
+        UTILS["utils - Utilidades"]
+        VAL["validators - Zod"]
+        SCHEMAS["schemas - Zod Schemas"]
+        CONST["constants - Constantes"]
+        ESLINT["eslint-config"]
+        TSCONFIG["typescript-config"]
+    end
+    subgraph DOCKER["docker/"]
+        DBE["backend/Dockerfile"]
+        DFE["frontend/Dockerfile"]
+        COMPOSE["compose files"]
+    end
+    subgraph DOCS["docs/"]
+        ARCH["architecture/"]
+        DOMAIN["domain/"]
+        ADR["adr/"]
+        DEVOPS["devops/"]
+    end
+    ROOT --> APPS
+    ROOT --> PACKAGES
+    ROOT --> DOCKER
+    ROOT --> DOCS
+    BE --> CONFIG
+    BE --> DB
+    BE --> LOG
+    BE --> Q
+    BE --> TEST
+    FE --> UI
+    FE --> SHARED
+    FE --> CONFIG
+    FE --> TEST
+    FE --> UTILS
